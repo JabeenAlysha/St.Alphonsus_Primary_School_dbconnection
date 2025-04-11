@@ -1,8 +1,6 @@
 <?php
 // classes.php — Show a list of classes and allow search by class name
 
-
-
 // Connect to the MySQL database
 $conn = new mysqli('localhost', 'root', '', 'StAlphonsus_Primary_school_system');
 
