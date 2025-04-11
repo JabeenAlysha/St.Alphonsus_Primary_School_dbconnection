@@ -1,53 +1,54 @@
 <?php
-// ================================
-// classes.php
-// This page displays Classes information and allows searching by the class name.
-// ================================
+// classes.php — Show a list of classes and allow search by class name
 
-// Enable error reporting (for development only)
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+// Show errors during development (disable before submitting)
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
 
-// --------------------------
-// Database Connection Setup
-// --------------------------
-$host     = 'localhost';
-$user     = 'root';
-$password = '';
-$database = 'StAlphonsus_Primary_school_system';
+// Connect to the MySQL database
+$conn = new mysqli('localhost', 'root', '', 'StAlphonsus_Primary_school_system');
 
-$conn = new mysqli($host, $user, $password, $database);
+// Check if the connection failed
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// --------------------------
-// Handle the Search Function
-// --------------------------
+// Get the search term from the input box if typed
 $searchTerm = isset($_GET['q']) ? trim($_GET['q']) : '';
 
-// Build SQL query to retrieve class records. We also include teacher_id and capacity.
+// Start writing the SQL to get class info from the classes table
 $sql = "SELECT class_id, class_name, teacher_id, capacity FROM classes";
-// If a search term is provided, filter classes by class_name.
+
+// If search term is entered, add a filter to the SQL
 if (!empty($searchTerm)) {
     $sql .= " WHERE class_name LIKE ?";
 }
 
-// --------------------------
-// Execute the Query
-// --------------------------
+// Run the SQL query
 if (!empty($searchTerm)) {
+    // Prepare a safe query using prepared statements
     $stmt = $conn->prepare($sql);
     if (!$stmt) {
         die("Prepared Statement Error: " . $conn->error);
     }
+
+    // Add wildcards so partial names also match
     $param = "%" . $searchTerm . "%";
+
+    // Add the search term into the query
     $stmt->bind_param("s", $param);
+
+    // Run the query
     $stmt->execute();
+
+    // Get the results to display later
     $result = $stmt->get_result();
 } else {
+    // No search typed, just run the basic query
     $result = $conn->query($sql);
+
+    // Stop if there's an error
     if (!$result) {
         die("Query Error: " . $conn->error);
     }
@@ -58,26 +59,31 @@ if (!empty($searchTerm)) {
 <head>
     <meta charset="UTF-8">
     <title>Classes - St. Alphonsus School Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        /* ---------- Overall Styling ---------- */
+        /* Set up background and fonts */
         body {
             margin: 0;
             font-family: Arial, sans-serif;
             background-color: #f0faff;
         }
-        /* ---------- Header Styling ---------- */
+
+        /* Header at the top of the page */
         .header {
             background-color: #004080;
             color: #fff;
             padding: 20px 0;
             text-align: center;
         }
-        /* ---------- Navigation Bar ---------- */
+
+        /* Navigation bar with page links */
         .navbar {
             background-color: #0073e6;
             padding: 10px;
             text-align: center;
         }
+
+        /* Each link in the navbar */
         .navbar a {
             color: #fff;
             text-decoration: none;
@@ -85,11 +91,14 @@ if (!empty($searchTerm)) {
             font-size: 18px;
             font-weight: bold;
         }
+
+        /* Highlight active page or hovered link */
         .navbar a.active,
         .navbar a:hover {
             text-decoration: underline;
         }
-        /* ---------- Main Container ---------- */
+
+        /* Container for main content */
         .container {
             width: 90%;
             max-width: 1000px;
@@ -99,11 +108,13 @@ if (!empty($searchTerm)) {
             border-radius: 6px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        /* ---------- Search Form ---------- */
+
+        /* Styling for the search box and button */
         .search-form {
             text-align: center;
             margin-bottom: 30px;
         }
+
         .search-form input[type="text"] {
             padding: 10px;
             width: 60%;
@@ -111,6 +122,7 @@ if (!empty($searchTerm)) {
             border: 1px solid #ccc;
             border-radius: 4px;
         }
+
         .search-form button {
             padding: 10px 20px;
             border: none;
@@ -119,15 +131,19 @@ if (!empty($searchTerm)) {
             border-radius: 4px;
             cursor: pointer;
         }
+
         .search-form button:hover {
             background-color: #003366;
         }
-        /* ---------- Section Title & Record Card Styling ---------- */
+
+        /* Section title above class list */
         .section-title {
             color: #004080;
             text-align: center;
             margin-bottom: 20px;
         }
+
+        /* Each class card shown on the page */
         .record-card {
             background: #fff;
             border: 1px solid #e0e0e0;
@@ -136,11 +152,15 @@ if (!empty($searchTerm)) {
             margin-bottom: 15px;
             border-radius: 4px;
         }
+
+        /* Title inside each record card (class name) */
         .record-card h3 {
             color: #004080;
             margin: 0 0 10px;
             font-size: 20px;
         }
+
+        /* Other text in the class card */
         .record-card p {
             margin: 5px 0;
             color: #333;
@@ -148,55 +168,67 @@ if (!empty($searchTerm)) {
     </style>
 </head>
 <body>
-    <!-- ---------- Header ---------- -->
-    <div class="header">
-        <h1>St. Alphonsus School Portal</h1>
+
+<!-- Page header -->
+<div class="header">
+    <h1>St. Alphonsus School Portal</h1>
+</div>
+
+<!-- Navigation bar to other sections -->
+<div class="navbar">
+    <a href="index.php">Students</a>
+    <a href="teachers.php">Teachers</a>
+    <a href="parents.php">Parents</a>
+    <a href="classes.php" class="active">Classes</a>
+    <a href="add_student.php">Add New Student</a>
+</div>
+
+<!-- Main content area -->
+<div class="container">
+
+    <!-- Search box for class name -->
+    <div class="search-form">
+        <form action="classes.php" method="get">
+            <input type="text" name="q" value="<?php echo htmlspecialchars($searchTerm); ?>" placeholder="Search Classes">
+            <button type="submit">Search</button>
+        </form>
     </div>
-    <!-- ---------- Navigation Bar ---------- -->
-    <div class="navbar">
-        <!-- The active link is set with a class="active" -->
-        <a href="index.php" class="active">Students</a>
-        <a href="teachers.php">Teachers</a>
-        <a href="parents.php">Parents</a>
-        <a href="classes.php">Classes</a>
-        <a href="add_student.php">Add New Student</a>
-    </div>
-    <!-- ---------- Main Content Container ---------- -->
-    <div class="container">
-        <!-- ---------- Search Form ---------- -->
-        <div class="search-form">
-            <form action="classes.php" method="get">
-                <input type="text" name="q" value="<?php echo htmlspecialchars($searchTerm); ?>" placeholder="Search Classes">
-                <button type="submit">Search</button>
-            </form>
-        </div>
-        <!-- ---------- Section Title ---------- -->
-        <h1 class="section-title">Classes</h1>
-        <!-- ---------- Display Class Records ---------- -->
-        <?php
-        if ($result) {
-            if ($result->num_rows > 0) {
-                while ($row = $result->fetch_assoc()) {
-                    echo '<div class="record-card">';
-                    // Display class name and its ID
-                    echo '<h3>' . htmlspecialchars($row['class_name']) . ' (ID: ' . htmlspecialchars($row['class_id']) . ')</h3>';
-                    // Show teacher's ID and class capacity
-                    echo '<p><strong>Teacher ID:</strong> ' . htmlspecialchars($row['teacher_id']) . '</p>';
-                    echo '<p><strong>Capacity:</strong> ' . htmlspecialchars($row['capacity']) . '</p>';
-                    echo '</div>';
-                }
-            } else {
-                echo '<p style="text-align: center;">No records found.</p>';
+
+    <!-- Title before list of classes -->
+    <h1 class="section-title">Classes</h1>
+
+    <?php
+    // If there are results to show
+    if ($result) {
+        if ($result->num_rows > 0) {
+            // Go through each class and display it
+            while ($row = $result->fetch_assoc()) {
+                echo '<div class="record-card">';
+                // Show class name and class ID
+                echo '<h3>' . htmlspecialchars($row['class_name']) . ' (ID: ' . htmlspecialchars($row['class_id']) . ')</h3>';
+                // Show teacher assigned and max capacity
+                echo '<p><strong>Teacher ID:</strong> ' . htmlspecialchars($row['teacher_id']) . '</p>';
+                echo '<p><strong>Capacity:</strong> ' . htmlspecialchars($row['capacity']) . '</p>';
+                echo '</div>';
             }
         } else {
-            echo '<p style="text-align: center;">Error executing query.</p>';
+            // No classes found
+            echo '<p style="text-align: center;">No records found.</p>';
         }
-        // Cleanup
-        if (!empty($searchTerm) && isset($stmt)) {
-            $stmt->close();
-        }
-        $conn->close();
-        ?>
-    </div>
+    } else {
+        // Problem with the query
+        echo '<p style="text-align: center;">Error executing query.</p>';
+    }
+
+    // Close the statement if search was used
+    if (!empty($searchTerm) && isset($stmt)) {
+        $stmt->close();
+    }
+
+    // Always close the database connection
+    $conn->close();
+    ?>
+</div>
+
 </body>
 </html>

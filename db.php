@@ -1,19 +1,19 @@
 <?php
-// db.php
+// Set database connection details
+$servername = "localhost";       // Server name 
+$username = "root";              // Default username for XAMPP
+$password = "";                  // Default password is usually blank
+$database = "StAlphonsus_Primary_school_system"; // Database name
 
-$servername = "localhost";
-$username = "root";
-$password = "";
-$database = "StAlphonsus_Primary_school_system";
-
-// Connect to MySQL
+// Create a new connection to the MySQL database
 $conn = new mysqli($servername, $username, $password, $database);
 
-// Check connection
+// Check if the connection was successful
 if ($conn->connect_error) {
+    // If connection failed, stop and show error
     die("Connection failed: " . $conn->connect_error);
 }
+
+// Close the connection
 $conn->close();
 ?>
-
-

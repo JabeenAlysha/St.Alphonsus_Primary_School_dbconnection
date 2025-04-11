@@ -1,37 +1,43 @@
 <?php
-// index.php — Shows students and allows searching by full name
+// index.php — Displays a list of students and includes a search feature by full name
 
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+// Uncomment below lines only if you're debugging during development
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
 
-// DB setup
+// Connect to the database
 $conn = new mysqli('localhost', 'root', '', 'StAlphonsus_Primary_school_system');
+
+// Stop the script if connection fails
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
+// Get the search term from the URL, or use an empty string if not provided
 $searchTerm = isset($_GET['q']) ? trim($_GET['q']) : '';
 
-// Base query (joins students with classes to show class name)
+// Base SQL query to get student details and class names
 $sql = "SELECT s.student_id, s.full_name, s.gender, s.address, c.class_name
         FROM students AS s
         LEFT JOIN classes AS c ON s.class_id = c.class_id";
 
 if (!empty($searchTerm)) {
+    // Add WHERE clause for search
     $sql .= " WHERE s.full_name LIKE ?";
-}
-
-if (!empty($searchTerm)) {
     $stmt = $conn->prepare($sql);
+
     if (!$stmt) {
         die("Prepared Statement Error: " . $conn->error);
     }
+
+    // Bind search term with wildcards
     $param = "%" . $searchTerm . "%";
     $stmt->bind_param("s", $param);
     $stmt->execute();
     $result = $stmt->get_result();
 } else {
+    // No search term — run base query
     $result = $conn->query($sql);
     if (!$result) {
         die("Query Error: " . $conn->error);
@@ -43,6 +49,7 @@ if (!empty($searchTerm)) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Students - St. Alphonsus School Portal</title>
     <style>
         body {
@@ -142,6 +149,7 @@ if (!empty($searchTerm)) {
 </div>
 
 <div class="container">
+    <!-- Search form -->
     <div class="search-form">
         <form action="index.php" method="get">
             <input type="text" name="q" value="<?php echo htmlspecialchars($searchTerm); ?>" placeholder="Search Students">
@@ -152,6 +160,7 @@ if (!empty($searchTerm)) {
     <h1 class="section-title">Students</h1>
 
     <?php
+    // Show student records if found
     if ($result && $result->num_rows > 0) {
         while ($row = $result->fetch_assoc()) {
             echo '<div class="record-card">';
@@ -165,10 +174,12 @@ if (!empty($searchTerm)) {
         echo '<p style="text-align: center;">No student records found.</p>';
     }
 
+    // Close statement if it was used
     if (!empty($searchTerm) && isset($stmt)) {
         $stmt->close();
     }
 
+    // Close DB connection
     $conn->close();
     ?>
 </div>
