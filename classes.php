@@ -1,10 +1,7 @@
 <?php
 // classes.php — Show a list of classes and allow search by class name
 
-// Show errors during development (disable before submitting)
-// ini_set('display_errors', 1);
-// ini_set('display_startup_errors', 1);
-// error_reporting(E_ALL);
+
 
 // Connect to the MySQL database
 $conn = new mysqli('localhost', 'root', '', 'StAlphonsus_Primary_school_system');
