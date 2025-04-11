@@ -2,13 +2,15 @@
 // Connect to the database
 $conn = new mysqli("localhost", "root", "", "StAlphonsus_Primary_school_system");
 
-// Check if connection failed
+// If connection fails, stop and show message
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Get class and teacher data for dropdowns
+// Get class list for the dropdown
 $classes = $conn->query("SELECT class_id, class_name FROM classes");
+
+// Get teacher list for the dropdown
 $teachers = $conn->query("SELECT teacher_id FROM teachers");
 ?>
 <!DOCTYPE html>
@@ -16,16 +18,15 @@ $teachers = $conn->query("SELECT teacher_id FROM teachers");
 <head>
     <meta charset="UTF-8">
     <title>Add Student</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        /* Page background and font */
+        /* Basic page style */
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #f0f9ff;
+            font-family: Arial, sans-serif;
+            background-color: #f0faff;
             margin: 0;
         }
 
-        /* Header styling */
+        /* Top blue header */
         header {
             background-color: #004080;
             color: white;
@@ -52,23 +53,21 @@ $teachers = $conn->query("SELECT teacher_id FROM teachers");
             text-decoration: underline;
         }
 
-        /* Container for form */
+        /* Main form box */
         .container {
             max-width: 800px;
             margin: 30px auto;
             background-color: white;
             padding: 30px;
             border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
 
         h2 {
             text-align: center;
             color: #004080;
-            margin-bottom: 20px;
         }
 
-        /* Input styling */
         label {
             font-weight: bold;
         }
@@ -76,32 +75,37 @@ $teachers = $conn->query("SELECT teacher_id FROM teachers");
         input, select, textarea {
             width: 100%;
             padding: 10px;
-            margin: 8px 0 16px;
+            margin: 10px 0 20px;
             border: 1px solid #ccc;
-            border-radius: 6px;
+            border-radius: 5px;
         }
 
-        /* Submit button */
         input[type="submit"] {
             background-color: #004080;
             color: white;
             font-size: 16px;
-            cursor: pointer;
             border: none;
+            cursor: pointer;
         }
 
         input[type="submit"]:hover {
             background-color: #003366;
         }
 
-        /* Message styling */
-        .success { color: green; text-align: center; }
-        .error { color: red; text-align: center; }
+        .success {
+            color: green;
+            text-align: center;
+        }
+
+        .error {
+            color: red;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
 
-<!-- Page header -->
+<!-- Website title -->
 <header>St. Alphonsus School Portal</header>
 
 <!-- Navigation links -->
@@ -113,17 +117,17 @@ $teachers = $conn->query("SELECT teacher_id FROM teachers");
     <a href="add_student.php">Add New Student</a>
 </nav>
 
-<!-- Form container -->
+<!-- Form section -->
 <div class="container">
     <h2>Add New Student</h2>
 
-    <!-- Form to submit student and parent data -->
+    <!-- Form starts here -->
     <form method="post" action="add_student.php">
-        <!-- Student Info -->
+        <!-- Student Information -->
         <label>Student ID:</label>
         <input type="text" name="student_id" required>
 
-        <label>Full Name:</label>
+        <label>Student Full Name:</label>
         <input type="text" name="student_name" required>
 
         <label>Gender:</label>
@@ -133,10 +137,10 @@ $teachers = $conn->query("SELECT teacher_id FROM teachers");
             <option value="Female">Female</option>
         </select>
 
-        <label>Address:</label>
+        <label>Student Address:</label>
         <textarea name="student_address" required></textarea>
 
-        <!-- Parent Info -->
+        <!-- Parent Information -->
         <label>Parent ID:</label>
         <input type="number" name="parent_id" required>
 
@@ -152,22 +156,28 @@ $teachers = $conn->query("SELECT teacher_id FROM teachers");
         <label>Parent Phone:</label>
         <input type="text" name="parent_phone" required>
 
-        <!-- Class dropdown -->
+        <!-- Class selection -->
         <label>Select Class:</label>
         <select name="class_id" required>
             <option value="">Select Class</option>
-            <?php while ($row = $classes->fetch_assoc()) {
+            <?php
+            // Show all class options
+            while ($row = $classes->fetch_assoc()) {
                 echo "<option value='{$row['class_id']}'>{$row['class_name']}</option>";
-            } ?>
+            }
+            ?>
         </select>
 
-        <!-- Teacher dropdown -->
-        <label>Select Teacher (by ID):</label>
+        <!-- Teacher selection -->
+        <label>Select Teacher ID:</label>
         <select name="teacher_id" required>
-            <option value="">Select Teacher ID</option>
-            <?php while ($row = $teachers->fetch_assoc()) {
+            <option value="">Select Teacher</option>
+            <?php
+            // Show all teacher ID options
+            while ($row = $teachers->fetch_assoc()) {
                 echo "<option value='{$row['teacher_id']}'>{$row['teacher_id']}</option>";
-            } ?>
+            }
+            ?>
         </select>
 
         <!-- Submit button -->
@@ -179,7 +189,7 @@ $teachers = $conn->query("SELECT teacher_id FROM teachers");
 </html>
 
 <?php
-// If the form has been submitted
+// This part runs when the form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Get student info from the form
     $student_id = $conn->real_escape_string($_POST['student_id']);
@@ -196,25 +206,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $parent_email = $conn->real_escape_string($_POST['parent_email']);
     $parent_phone = $conn->real_escape_string($_POST['parent_phone']);
 
-    // Use a flag to track success
-    $success = true;
+    // Set a flag to check if everything works
+    $ok = true;
 
-    // Insert student into students table
-    $success &= $conn->query("INSERT INTO students (student_id, full_name, gender, address, class_id)
-        VALUES ('$student_id', '$student_name', '$gender', '$student_address', $class_id)");
+    // Save student to the database
+    $sql1 = "INSERT INTO students (student_id, full_name, gender, address, class_id)
+             VALUES ('$student_id', '$student_name', '$gender', '$student_address', $class_id)";
+    if (!$conn->query($sql1)) {
+        echo "<p class='error'>❌ Could not save student: " . $conn->error . "</p>";
+        $ok = false;
+    }
 
-    // Insert parent into parents table
-    $success &= $conn->query("INSERT INTO parents (parent_id, full_name, address, email, phone)
-        VALUES ($parent_id, '$parent_name', '$parent_address', '$parent_email', '$parent_phone')");
+    // Save parent to the database
+    $sql2 = "INSERT INTO parents (parent_id, full_name, address, email, phone)
+             VALUES ($parent_id, '$parent_name', '$parent_address', '$parent_email', '$parent_phone')";
+    if (!$conn->query($sql2)) {
+        echo "<p class='error'>❌ Could not save parent: " . $conn->error . "</p>";
+        $ok = false;
+    }
 
-    // Link student and parent in student_parents table
-    $success &= $conn->query("INSERT INTO student_parents (student_id, parent_id)
-        VALUES ('$student_id', $parent_id)");
+    // Link student to parent
+    $sql3 = "INSERT INTO student_parent (student_id, parent_id)
+             VALUES ('$student_id', $parent_id)";
+    if (!$conn->query($sql3)) {
+        echo "<p class='error'>❌ Could not link student and parent: " . $conn->error . "</p>";
+        $ok = false;
+    }
 
-    // Show result message
-    echo $success
-        ? "<p class='success'>✅ Student and parent added and linked successfully!</p>"
-        : "<p class='error'>❌ Something went wrong. Check that the IDs are unique and valid.</p>";
+    // Show success message if everything worked
+    if ($ok) {
+        echo "<p class='success'>✅ Student and parent added successfully!</p>";
+    }
 
     // Close the database connection
     $conn->close();
